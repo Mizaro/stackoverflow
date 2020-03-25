@@ -101,14 +101,14 @@ def main():
 
     session = Session()
 
-    obj = session.query(Episode).first()
-    session.expunge(obj)
+    first_episode = session.query(Episode).first()
+    session.expunge(first_episode)
 
     session.commit()
     session.flush()
     session.close()
 
-    print(obj.season.series.series_name == "foo")
+    print(first_episode.season.series.series_name == "foo")
 
 
 if __name__ == '__main__':
