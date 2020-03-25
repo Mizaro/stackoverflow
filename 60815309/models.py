@@ -1,3 +1,7 @@
+"""
+Reproducing
+https://stackoverflow.com/questions/60815309/how-to-expunge-foreign-key-reocrds-in-sqlalchemy
+"""
 import enum
 
 from sqlalchemy import UniqueConstraint, ForeignKey, Integer, Column, Unicode, Enum, \
@@ -96,9 +100,14 @@ def main():
     init_db(Session)
 
     session = Session()
+
     obj = session.query(Episode).first()
     session.expunge(obj)
+
+    session.commit()
+    session.flush()
     session.close()
+
     print(obj.season.series.series_name == "foo")
 
 
