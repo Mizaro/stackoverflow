@@ -102,9 +102,7 @@ def main():
     session = Session()
 
     first_episode = session.query(Episode).first()
-    session.expunge(first_episode)
-    session.expunge(first_episode.season)
-    session.expunge(first_episode.season.series)
+    session.expunge_all()
 
     session.commit()
     session.flush()
