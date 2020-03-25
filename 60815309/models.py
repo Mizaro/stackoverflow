@@ -2,12 +2,15 @@
 Reproducing
 https://stackoverflow.com/questions/60815309/how-to-expunge-foreign-key-reocrds-in-sqlalchemy
 """
+import contextlib
 import enum
+import re
 
 from sqlalchemy import UniqueConstraint, ForeignKey, Integer, Column, Unicode, Enum, \
     create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm.exc import DetachedInstanceError
 
 Base = declarative_base()
 
@@ -92,23 +95,68 @@ def init_db(Session):
     session.close()
 
 
+@contextlib.contextmanager
+def session_context(Session):
+    session = Session()
+    try:
+        yield session
+    finally:
+        session.commit()
+        session.flush()
+        session.close()
+
+
+def _extract_class_name(error):
+    return re.search("(?:Parent )?[iI]nstance <(.*) at 0x", error._message()).group(1)
+
+
 def main():
     engine = create_engine('sqlite://')
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine, expire_on_commit=True)
-
     init_db(Session)
 
-    session = Session()
+    print("no expunge at all")
+    with session_context(Session) as session:
+        first_episode = session.query(Episode).first()
+    try_get_info(first_episode)
 
-    first_episode = session.query(Episode).first()
-    session.expunge_all()
+    print("expunge only the first object")
+    with session_context(Session) as session:
+        first_episode = session.query(Episode).first()
+        session.expunge(first_episode)
+    try_get_info(first_episode)
 
-    session.commit()
-    session.flush()
-    session.close()
+    print("expunge only the first and second object")
+    with session_context(Session) as session:
+        first_episode = session.query(Episode).first()
+        session.expunge(first_episode)
+        session.expunge(first_episode.season)
+    try_get_info(first_episode)
 
-    print(first_episode.season.series.series_name == "foo")
+    print("expunge only the first, second and third object")
+    with session_context(Session) as session:
+        first_episode = session.query(Episode).first()
+        session.expunge(first_episode)
+        session.expunge(first_episode.season)
+        session.expunge(first_episode.season.series)
+    try_get_info(first_episode)
+
+    print("expunge_all")
+    with session_context(Session) as session:
+        first_episode = session.query(Episode).first()
+        session.expunge_all()
+    try_get_info(first_episode)
+
+
+def try_get_info(first_episode):
+    try:
+        first_episode.season.series.series_name == "foo"
+    except DetachedInstanceError as e:
+        print("{} is not expunged".format(_extract_class_name(e)))
+    else:
+        print("Working!")
+    print()
 
 
 if __name__ == '__main__':
