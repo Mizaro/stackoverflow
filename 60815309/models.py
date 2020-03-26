@@ -102,7 +102,7 @@ def session_context(Session):
         yield session
     finally:
         session.commit()
-        session.flush()
+        # session.flush()
         session.close()
 
 
