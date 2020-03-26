@@ -1,0 +1,25 @@
+[merge-tools]
+# 32bit stable
+# vscode.regkey=SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{F8A2A208-72B3-4D61-95FC-8A65D340689B}_is1
+# 64bit stable
+vscode.regkey=SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{EA457B21-F73E-494C-ACAB-524FDE069978}_is1
+vscode.regname=DisplayIcon
+vscode.args= --wait $output
+vscode.binary=False
+vscode.gui=True
+vscode.checkconflicts=True
+vscode.premerge=keep
+
+[extensions]
+extdiff=
+
+[extdiff]
+# cmd.vscode="D:\Program Files\Microsoft VS Code\Code.exe"
+# opts.vscode= --wait
+
+[merge-patterns]
+*.*=vscode
+
+[ui]
+merge= :vscode
+verbose = True
